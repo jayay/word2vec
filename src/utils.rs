@@ -29,7 +29,14 @@ pub fn dot_product(arr1: &Vec<f32>, arr2: &Vec<f32>) -> f32 {
 pub fn vector_norm(vector: &mut Vec<f32>) {
     assert!(vector.len() % 4 == 0);
 
-    let sum = 1.0 / vector.chunks_exact(4).map(f32x4::from_slice_unaligned).map(|x|x * x).sum::<f32x4>().sum().sqrt();
+    let sum = 1.0
+        / vector
+            .chunks_exact(4)
+            .map(f32x4::from_slice_unaligned)
+            .map(|x| x * x)
+            .sum::<f32x4>()
+            .sum()
+            .sqrt();
     for x in vector.iter_mut() {
         (*x) *= sum;
     }
@@ -42,7 +49,6 @@ pub fn vector_norm(vector: &mut Vec<f32>) {
         (*x) *= sum;
     }
 }
-
 
 /// Get the mean (average) of the given Iterator of numbers
 pub fn mean<Iterable: Iterator<Item = f32>>(numbers: Iterable) -> f32 {
