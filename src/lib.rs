@@ -1,3 +1,5 @@
+#![feature(test)]
+extern crate test;
 extern crate byteorder;
 
 pub mod vectorreader;
