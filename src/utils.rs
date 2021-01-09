@@ -1,5 +1,6 @@
 #[cfg(feature = "simd")]
 extern crate packed_simd;
+
 #[cfg(feature = "simd")]
 use self::packed_simd::f32x4;
 

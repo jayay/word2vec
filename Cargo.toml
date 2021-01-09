@@ -15,12 +15,10 @@ include = [
 
 [dependencies]
 byteorder = "1"
+packed_simd = { version = "0.3.4", package = "packed_simd_2", optional = true }
 
-packed_simd = { version = "0.3.3", optional = true }
 [features]
-
 default = []
-
 simd = ["packed_simd"]
 
 [[test]]
