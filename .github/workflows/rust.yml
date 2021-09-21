@@ -22,4 +22,4 @@ jobs:
           toolchain: nightly
           override: true
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --features "simd" --verbose
