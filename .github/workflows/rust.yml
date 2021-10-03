@@ -5,6 +5,8 @@ on:
     branches: [ simd ]
   pull_request:
     branches: [ '*' ]
+  schedule:
+    - cron:  '45 5,17 * * *'
 
 env:
   CARGO_TERM_COLOR: always
