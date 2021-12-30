@@ -1,4 +1,8 @@
+#![feature(test)]
 extern crate word2vec;
+extern crate test;
+
+use test::Bencher;
 use word2vec::wordvectors::WordVector;
 
 
@@ -57,4 +61,17 @@ fn test_word_analogy_with_empty_params() {
 fn test_word_count_is_correctly_returned() {
     let v = WordVector::load_from_binary(PATH).unwrap();
     assert_eq!(v.word_count(), 71291);
+}
+
+#[bench]
+fn bench_word_cosine(b: &mut Bencher) {
+    let model = WordVector::load_from_binary(PATH).unwrap();
+    b.iter(|| model.cosine("winter", 10).unwrap());
+}
+
+#[bench]
+fn bench_word_analogy(b: &mut Bencher) {
+    let model = WordVector::load_from_binary(PATH).unwrap();
+
+    b.iter(|| model.analogy(vec!["woman", "king"], vec!["man"], 10).unwrap());
 }
