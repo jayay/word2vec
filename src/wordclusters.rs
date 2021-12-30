@@ -2,7 +2,7 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::fs::File;
 use std::collections::HashMap;
-use errors::Word2VecError;
+use crate::errors::Word2VecError;
 
 
 pub struct WordClusters {

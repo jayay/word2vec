@@ -2,9 +2,9 @@ use std::io::prelude::*;
 use std::io::BufReader;
 use std::fs::File;
 use std::cmp::Ordering;
-use utils;
-use errors::Word2VecError;
-use vectorreader::WordVectorReader;
+use crate::utils;
+use crate::errors::Word2VecError;
+use crate::vectorreader::WordVectorReader;
 
 /// Representation of a word vector space
 ///

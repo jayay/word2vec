@@ -2,7 +2,7 @@ use std::io::BufRead;
 
 use byteorder::{ReadBytesExt, LittleEndian};
 
-use errors::Word2VecError;
+use crate::errors::Word2VecError;
 
 pub struct WordVectorReader<R : BufRead> {
     vocabulary_size: usize,
