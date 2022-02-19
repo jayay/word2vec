@@ -17,6 +17,8 @@ include = [
 [dependencies]
 byteorder = "1"
 packed_simd = { version = "^0.3.5", package = "packed_simd_2", optional = true }
+tokio = { version = "1.15.0", features = ["full"] }
+async-trait = "0.1.52"
 
 [features]
 default = []
@@ -24,6 +26,3 @@ simd = ["packed_simd"]
 
 [[test]]
 name = "tests"
-
-[dev-dependencies]
-tokio = { version = "1.15.0", features = ["full"] }

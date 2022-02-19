@@ -1,36 +1,27 @@
-use std::io::BufRead;
-
-use byteorder::{ReadBytesExt, LittleEndian};
-
+use tokio::io::{AsyncBufRead, AsyncBufReadExt, AsyncReadExt};
 use crate::errors::Word2VecError;
+use crate::utils;
+use crate::wordvectors::WordVector;
 
-pub struct WordVectorReader<R : BufRead> {
+use async_trait::async_trait;
+
+pub struct WordVectorReader<R: 'static + tokio::io::AsyncBufRead> {
     vocabulary_size: usize,
     vector_size: usize,
-    reader: R,
-
-    ended_early: bool,
-    vectors_read: usize
+    reader: &'static mut R,
 }
 
-impl<R : BufRead> WordVectorReader<R> {
-
-    pub fn vocabulary_size(&self) -> usize {
-        self.vocabulary_size
-    }
-
-    pub fn vector_size(&self) -> usize {
-        self.vector_size
-    }
-
-    pub fn new_from_reader(mut reader: R) -> Result<WordVectorReader<R>, Word2VecError> {
-        
-        // Read UTF8 header string from start of file
+impl<R: AsyncBufRead + Unpin> WordVectorReader<R> {
+    pub async fn new_from_reader(
+        reader: &'static mut R,
+    ) -> Result<WordVectorReader<R>, Word2VecError> {
         let mut header = String::new();
-        reader.read_line(&mut header)?;
+        // Read UTF8 header string from start of file
+        let _ = &reader.read_line(&mut header).await.unwrap();
 
         //Parse 2 integers, separated by whitespace
-        let header_info = header.split_whitespace()
+        let header_info = header
+            .split_whitespace()
             .filter_map(|x| x.parse::<usize>().ok())
             .take(2)
             .collect::<Vec<usize>>();
@@ -42,54 +33,55 @@ impl<R : BufRead> WordVectorReader<R> {
         Ok(WordVectorReader {
             vocabulary_size: header_info[0],
             vector_size: header_info[1],
-            vectors_read: 0,
-            ended_early: false,
             reader,
         })
     }
-
 }
 
-impl<R : BufRead> Iterator for WordVectorReader<R> {
-    type Item = (String, Vec<f32>);
+#[async_trait]
+pub trait WordVectorBuilder {
+    async fn build_vocabulary(self) -> Result<&'static WordVector, Word2VecError>;
+}
 
-    fn next(&mut self) -> Option<(String, Vec<f32>)> {
-
-        if self.vectors_read == self.vocabulary_size {
-            return None;
-        }
-
-        // Read the bytes of the word string
-        let mut word_bytes: Vec<u8> = Vec::new();
-        if self.reader.read_until(b' ', &mut word_bytes).is_err() {
-            // End the stream if a read error occurred
-            self.ended_early = true;
-            return None;
-        }
-
-        // trim newlines, some vector files have newlines in front of a new word, others don't
-        let word = match String::from_utf8(word_bytes) {
-            Err(_) => {
-                self.ended_early = true;
-                return None
-            },
-            Ok(word) => word.trim().into(),
-        };
-
-        // Read floats of the vector
-        let mut vector: Vec<f32> = Vec::with_capacity(self.vector_size);
-        for _ in 0 .. self.vector_size {
-            match self.reader.read_f32::<LittleEndian>() {
-                Err(_) => {
-                    self.ended_early = true;
-                    return None
-                },
-                Ok(value) => vector.push(value)
+#[async_trait]
+impl<R: AsyncBufRead + Unpin + Send> WordVectorBuilder for WordVectorReader<R> {
+    async fn build_vocabulary(self) -> Result<&'static WordVector, Word2VecError> {
+        let mut vocabulary = Vec::with_capacity(self.vocabulary_size);
+        for _ in 0..self.vocabulary_size {
+            let mut word_bytes: Vec<u8> = Vec::new();
+            if let Err(e) = self.reader.read_until(b' ', &mut word_bytes).await {
+                return Err(Word2VecError::from(e));
             }
+
+            // trim newlines, some vector files have newlines in front of a new word, others don't
+            let word = match String::from_utf8(word_bytes) {
+                Err(e) => {
+                    return Err(Word2VecError::from(e));
+                }
+                Ok(word) => word.trim().into(),
+            };
+
+            // Read floats of the vector
+            let mut vector = Vec::<f32>::with_capacity(self.vector_size);
+
+            for _ in 0..self.vector_size {
+                match self.reader.read_f32_le().await {
+                    Err(e) => return Err(Word2VecError::from(e)),
+                    Ok(value) => vector.push(value),
+                }
+            }
+
+            utils::vector_norm(&mut vector);
+            // one iteration
+            vocabulary.push((word, vector));
         }
+        let vector_size = self.vector_size;
+        let bomx = Box::new(WordVector {
+            vocabulary,
+            vector_size,
+        });
+        let ptr = Box::leak(bomx);
 
-        self.vectors_read += 1;
-        Some((word, vector))
-
+        Ok(ptr)
     }
 }

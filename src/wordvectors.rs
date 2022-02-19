@@ -1,56 +1,44 @@
-
-use std::io::prelude::*;
-use std::io::BufReader;
-use std::fs::File;
 use std::cmp::Ordering;
-use crate::utils;
+use tokio::io::AsyncBufRead;
+
 use crate::errors::Word2VecError;
-use crate::vectorreader::WordVectorReader;
+use crate::utils;
+use crate::vectorreader::WordVectorBuilder;
+use crate::vectorreader::{WordVectorReader};
 
 /// Representation of a word vector space
 ///
 /// Each word of a vocabulary is represented by a vector. All words span a vector space. This data
 /// structure manages this vector space of words.
 pub struct WordVector {
-    vocabulary: Vec<(String, Vec<f32>)>,
-    vector_size: usize,
+    pub vocabulary: Vec<(String, Vec<f32>)>,
+    pub vector_size: usize,
 }
 
 impl WordVector {
-
     /// Load a word vector space from file
     ///
     /// Word2vec is able to store the word vectors in a binary file. This function parses the file
     /// and loads the vectors into RAM.
-    pub async fn load_from_binary(file_name: &str) -> Result<WordVector, Word2VecError> {
-        let file = File::open(file_name)?;
-        let reader = BufReader::new(file);
+    pub async fn load_from_binary(
+        file_name: &str,
+    ) -> Result<&'static WordVector, Word2VecError> {
+        let file = tokio::fs::File::open(file_name).await?;
+        let reader = Box::new(tokio::io::BufReader::new(file));
+        let stat = Box::leak(reader);
 
-        WordVector::load_from_reader(reader).await
+        WordVector::load_from_reader(stat).await
     }
 
     /// Load a word vector space from a reader
     ///
     /// Word2vec is able to store the word vectors in a binary format. This function parses the bytes in that format
     /// and loads the vectors into RAM.
-    pub async fn load_from_reader<R: BufRead>(reader: R) -> Result<WordVector, Word2VecError> {
-
-        let reader = WordVectorReader::new_from_reader(reader)?;
-        let vector_size = reader.vector_size();
-
-        let mut vocabulary: Vec<(String, Vec<f32>)> = Vec::with_capacity(reader.vocabulary_size());
-        for item in reader {
-
-            let (word, mut vector) = item;
-            utils::vector_norm(&mut vector);
-
-            vocabulary.push((word, vector));
-        }
-
-        Ok(WordVector {
-            vocabulary,
-            vector_size,
-        })
+    pub async fn load_from_reader<R: AsyncBufRead + Unpin + Send>(
+        reader: &'static mut R,
+    ) -> Result<&'static WordVector, Word2VecError> {
+        let reader = WordVectorReader::new_from_reader(reader).await?;
+        reader.build_vocabulary().await
     }
 
     fn get_index(&self, word: &str) -> Option<usize> {
@@ -74,20 +62,33 @@ impl WordVector {
     pub async fn cosine(&self, word: &str, n: usize) -> Option<Vec<(String, f32)>> {
         let word_vector = self.get_vector(word).await;
         match word_vector {
-            Some(val) => { // save index and cosine distance to current word
+            Some(val) => {
+                // save index and cosine distance to current word
                 let mut metrics: Vec<(usize, f32)> = Vec::with_capacity(self.vocabulary.len());
-                metrics.extend(self.vocabulary.iter().enumerate().
-                        map(|(i, other_val)|
-                    (i, utils::dot_product(&other_val.1, val))));
+                metrics.extend(
+                    self.vocabulary
+                        .iter()
+                        .enumerate()
+                        .map(|(i, other_val)| (i, utils::dot_product(&other_val.1, val))),
+                );
                 metrics.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
-                Some(metrics[1..n+1].iter().map(|&(idx, dist)| 
-                         (self.vocabulary[idx].clone().0, dist)).collect())
+                Some(
+                    metrics[1..n + 1]
+                        .iter()
+                        .map(|&(idx, dist)| (self.vocabulary[idx].clone().0, dist))
+                        .collect(),
+                )
             }
             None => None,
         }
     }
 
-    pub async fn analogy(&self, pos: Vec<&str>, neg: Vec<&str>, n: usize) -> Option<Vec<(String, f32)>> {
+    pub async fn analogy(
+        &self,
+        pos: Vec<&str>,
+        neg: Vec<&str>,
+        n: usize,
+    ) -> Option<Vec<(String, f32)>> {
         let mut vectors: Vec<Vec<f32>> = Vec::new();
         let mut exclude: Vec<String> = Vec::new();
         for word in pos {
@@ -117,7 +118,13 @@ impl WordVector {
         }
         metrics.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
         metrics.retain(|x| !exclude.contains(x.0));
-        Some(metrics.iter().take(n).map(|&(x,y)| (x.clone(), y)).collect())
+        Some(
+            metrics
+                .iter()
+                .take(n)
+                .map(|&(x, y)| (x.clone(), y))
+                .collect(),
+        )
     }
 
     /// Get the number of all known words from the vocabulary.
@@ -131,7 +138,7 @@ impl WordVector {
     }
 
     /// Get all known words from the vocabulary.
-    pub fn get_words(& self) -> Words {
+    pub fn get_words(&self) -> Words {
         Words::new(&self.vocabulary)
     }
 }
@@ -143,10 +150,7 @@ pub struct Words<'parent> {
 
 impl<'a> Words<'a> {
     fn new(x: &'a Vec<(String, Vec<f32>)>) -> Words<'a> {
-        Words {
-            words: x,
-            index: 0,
-        }
+        Words { words: x, index: 0 }
     }
 }
 
