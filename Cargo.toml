@@ -24,3 +24,6 @@ simd = ["packed_simd"]
 
 [[test]]
 name = "tests"
+
+[dev-dependencies]
+tokio = { version = "1.15.0", features = ["full"] }

@@ -1,4 +1,6 @@
 #![feature(test)]
+#![feature(async_closure)]
+#![feature(generic_associated_types)]
 extern crate test;
 extern crate byteorder;
 

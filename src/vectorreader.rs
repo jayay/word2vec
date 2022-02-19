@@ -16,11 +16,11 @@ pub struct WordVectorReader<R : BufRead> {
 impl<R : BufRead> WordVectorReader<R> {
 
     pub fn vocabulary_size(&self) -> usize {
-        return self.vocabulary_size;
+        self.vocabulary_size
     }
 
     pub fn vector_size(&self) -> usize {
-        return self.vector_size;
+        self.vector_size
     }
 
     pub fn new_from_reader(mut reader: R) -> Result<WordVectorReader<R>, Word2VecError> {
@@ -39,13 +39,13 @@ impl<R : BufRead> WordVectorReader<R> {
         }
 
         //We've successfully read the header, ready to read vectors
-        return Ok(WordVectorReader {
+        Ok(WordVectorReader {
             vocabulary_size: header_info[0],
             vector_size: header_info[1],
             vectors_read: 0,
             ended_early: false,
             reader,
-        });
+        })
     }
 
 }
@@ -89,7 +89,7 @@ impl<R : BufRead> Iterator for WordVectorReader<R> {
         }
 
         self.vectors_read += 1;
-        return Some((word, vector))
+        Some((word, vector))
 
     }
 }

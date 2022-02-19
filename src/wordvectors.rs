@@ -1,3 +1,4 @@
+
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::fs::File;
@@ -25,7 +26,7 @@ impl WordVector {
         let file = File::open(file_name)?;
         let reader = BufReader::new(file);
 
-        return WordVector::load_from_reader(reader);
+        WordVector::load_from_reader(reader)
     }
 
     /// Load a word vector space from a reader
@@ -65,7 +66,7 @@ impl WordVector {
         }
     }
 
-    /// Compute consine distance to similar words.
+    /// Compute cosine distance to similar words.
     ///
     /// The words in the vector space are characterized through the position and angle to each
     /// other. This method calculates the `n` closest words via the cosine of the requested word to
@@ -115,7 +116,7 @@ impl WordVector {
             metrics.push((&word.0, utils::dot_product(&word.1, &mean)));
         }
         metrics.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
-        metrics.retain(|x| !exclude.contains(&x.0));
+        metrics.retain(|x| !exclude.contains(x.0));
         Some(metrics.iter().take(n).map(|&(x,y)| (x.clone(), y)).collect())
     }
 

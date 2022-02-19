@@ -15,7 +15,7 @@ impl WordClusters {
         let file = File::open(file_name)?;
         let reader = BufReader::new(file);
 
-        return WordClusters::load_from_reader(reader)
+        WordClusters::load_from_reader(reader)
     }
 
     pub fn load_from_reader<R: BufRead>(mut reader: R) -> Result<WordClusters, Word2VecError> {

@@ -6,7 +6,7 @@ use test::Bencher;
 use word2vec::wordvectors::WordVector;
 
 
-const PATH: &'static str = "vectors.bin";
+const PATH: &str = "vectors.bin";
 
 
 #[test]
