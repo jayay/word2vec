@@ -22,18 +22,18 @@ impl WordVector {
     ///
     /// Word2vec is able to store the word vectors in a binary file. This function parses the file
     /// and loads the vectors into RAM.
-    pub fn load_from_binary(file_name: &str) -> Result<WordVector, Word2VecError> {
+    pub async fn load_from_binary(file_name: &str) -> Result<WordVector, Word2VecError> {
         let file = File::open(file_name)?;
         let reader = BufReader::new(file);
 
-        WordVector::load_from_reader(reader)
+        WordVector::load_from_reader(reader).await
     }
 
     /// Load a word vector space from a reader
     ///
     /// Word2vec is able to store the word vectors in a binary format. This function parses the bytes in that format
     /// and loads the vectors into RAM.
-    pub fn load_from_reader<R: BufRead>(reader: R) -> Result<WordVector, Word2VecError> {
+    pub async fn load_from_reader<R: BufRead>(reader: R) -> Result<WordVector, Word2VecError> {
 
         let reader = WordVectorReader::new_from_reader(reader)?;
         let vector_size = reader.vector_size();
@@ -58,7 +58,7 @@ impl WordVector {
     }
 
     /// Get word vector for the given word.
-    pub fn get_vector(&self, word: &str) -> Option<&Vec<f32>> {
+    pub async fn get_vector(&self, word: &str) -> Option<&Vec<f32>> {
         let index = self.get_index(word);
         match index {
             Some(val) => Some(&self.vocabulary[val].1),
@@ -71,8 +71,8 @@ impl WordVector {
     /// The words in the vector space are characterized through the position and angle to each
     /// other. This method calculates the `n` closest words via the cosine of the requested word to
     /// all other words.
-    pub fn cosine(&self, word: &str, n: usize) -> Option<Vec<(String, f32)>> {
-        let word_vector = self.get_vector(word);
+    pub async fn cosine(&self, word: &str, n: usize) -> Option<Vec<(String, f32)>> {
+        let word_vector = self.get_vector(word).await;
         match word_vector {
             Some(val) => { // save index and cosine distance to current word
                 let mut metrics: Vec<(usize, f32)> = Vec::with_capacity(self.vocabulary.len());
@@ -87,19 +87,19 @@ impl WordVector {
         }
     }
 
-    pub fn analogy(&self, pos: Vec<&str>, neg: Vec<&str>, n: usize) -> Option<Vec<(String, f32)>> {
+    pub async fn analogy(&self, pos: Vec<&str>, neg: Vec<&str>, n: usize) -> Option<Vec<(String, f32)>> {
         let mut vectors: Vec<Vec<f32>> = Vec::new();
         let mut exclude: Vec<String> = Vec::new();
         for word in pos {
             exclude.push(word.to_string());
-            match self.get_vector(word) {
+            match self.get_vector(word).await {
                 Some(val) => vectors.push(val.clone()),
                 None => {}
             }
         }
         for word in neg.iter() {
             exclude.push(word.to_string());
-            match self.get_vector(word) {
+            match self.get_vector(word).await {
                 Some(val) => vectors.push(val.iter().map(|x| -x).collect::<Vec<f32>>()),
                 None => {}
             }
@@ -121,12 +121,12 @@ impl WordVector {
     }
 
     /// Get the number of all known words from the vocabulary.
-    pub fn word_count(&self) -> usize {
+    pub async fn word_count(&self) -> usize {
         self.vocabulary.len()
     }
 
     /// Return the number of columns of the word vector.
-    pub fn get_col_count(&self) -> usize {
+    pub async fn get_col_count(&self) -> usize {
         self.vector_size // size == column count
     }
 
