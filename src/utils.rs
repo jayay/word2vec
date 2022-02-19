@@ -18,7 +18,7 @@ pub fn dot_product(x: &[f32], y: &[f32]) -> f32 {
 }
 
 #[cfg(not(feature = "simd"))]
-pub fn dot_product(arr1: &Vec<f32>, arr2: &Vec<f32>) -> f32 {
+pub fn dot_product(arr1: &[f32], arr2: &[f32]) -> f32 {
     let mut result: f32 = 0.0;
     for (elem1, elem2) in arr1.iter().zip(arr2.iter()) {
         result += elem1 * elem2;
@@ -49,7 +49,7 @@ pub fn vector_norm(vector: &mut Vec<f32>) {
 }
 
 #[cfg(not(feature = "simd"))]
-pub fn vector_norm(vector: &mut Vec<f32>) {
+pub fn vector_norm(vector: &mut [f32]) {
     let sum = 1.0 / vector.iter().fold(0f32, |sum, &x| sum + (x * x)).sqrt();
     for x in vector.iter_mut() {
         (*x) *= sum;

@@ -61,8 +61,8 @@ impl<R : BufRead> Iterator for WordVectorReader<R> {
 
         // Read the bytes of the word string
         let mut word_bytes: Vec<u8> = Vec::new();
-        if let Err(_) = self.reader.read_until(b' ', &mut word_bytes) {
-            // End the stream if a read error occured
+        if self.reader.read_until(b' ', &mut word_bytes).is_err() {
+            // End the stream if a read error occurred
             self.ended_early = true;
             return None;
         }
