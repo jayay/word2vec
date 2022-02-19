@@ -1,6 +1,7 @@
 extern crate word2vec;
 
-fn main(){
+#[tokio::main]
+async fn main(){
 	let model = word2vec::wordvectors::WordVector::load_from_binary(
 		"vectors.bin").expect("Unable to load word vector model");
 	println!("{:?}", model.cosine("snow", 10));

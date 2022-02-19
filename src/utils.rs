@@ -68,8 +68,8 @@ mod tests {
     use super::*;
     use test::Bencher;
 
-    #[test]
-    fn test_dot_product() {
+    #[tokio::test]
+    async fn test_dot_product() {
         let x = vec![0.12345, 0.56789, 0.4, -434.4];
         let y = vec![0.2453, -0.234234, -0.9323, 0.1235];
         assert!((-54.124058 - dot_product(&x, &y)).abs() < 0.000005);
