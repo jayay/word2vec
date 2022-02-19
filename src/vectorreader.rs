@@ -72,7 +72,6 @@ impl<R: AsyncBufRead + Unpin + Send> WordVectorBuilder for WordVectorReader<R> {
             }
 
             utils::vector_norm(&mut vector);
-            // one iteration
             vocabulary.push((word, vector));
         }
         let vector_size = self.vector_size;
