@@ -1,14 +1,12 @@
+use crate::errors::Word2VecError;
+use std::collections::HashMap;
+use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
-use std::fs::File;
-use std::collections::HashMap;
-use crate::errors::Word2VecError;
-
 
 pub struct WordClusters {
     clusters: HashMap<i32, Vec<String>>,
 }
-
 
 impl WordClusters {
     pub fn load_from_file(file_name: &str) -> Result<WordClusters, Word2VecError> {
