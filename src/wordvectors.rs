@@ -1,5 +1,4 @@
 use std::cmp::Ordering;
-use tokio::io::AsyncBufRead;
 
 use crate::errors::Word2VecError;
 use crate::utils;
