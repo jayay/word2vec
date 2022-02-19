@@ -4,7 +4,7 @@ use tokio::io::AsyncBufRead;
 use crate::errors::Word2VecError;
 use crate::utils;
 use crate::vectorreader::WordVectorBuilder;
-use crate::vectorreader::{WordVectorReader};
+use crate::vectorreader::WordVectorReader;
 
 /// Representation of a word vector space
 ///
@@ -20,25 +20,13 @@ impl WordVector {
     ///
     /// Word2vec is able to store the word vectors in a binary file. This function parses the file
     /// and loads the vectors into RAM.
-    pub async fn load_from_binary(
-        file_name: &str,
-    ) -> Result<&'static WordVector, Word2VecError> {
+    pub async fn load_from_binary(file_name: &str) -> Result<&'static WordVector, Word2VecError> {
         let file = tokio::fs::File::open(file_name).await?;
         let reader = Box::new(tokio::io::BufReader::new(file));
         let stat = Box::leak(reader);
 
-        WordVector::load_from_reader(stat).await
-    }
-
-    /// Load a word vector space from a reader
-    ///
-    /// Word2vec is able to store the word vectors in a binary format. This function parses the bytes in that format
-    /// and loads the vectors into RAM.
-    pub async fn load_from_reader<R: AsyncBufRead + Unpin + Send>(
-        reader: &'static mut R,
-    ) -> Result<&'static WordVector, Word2VecError> {
-        let reader = WordVectorReader::new_from_reader(reader).await?;
-        reader.build_vocabulary().await
+        let b = WordVectorReader::new_from_reader(stat).await?;
+        b.build_vocabulary().await
     }
 
     fn get_index(&self, word: &str) -> Option<usize> {
@@ -64,13 +52,12 @@ impl WordVector {
         match word_vector {
             Some(val) => {
                 // save index and cosine distance to current word
-                let mut metrics: Vec<(usize, f32)> = Vec::with_capacity(self.vocabulary.len());
-                metrics.extend(
-                    self.vocabulary
-                        .iter()
-                        .enumerate()
-                        .map(|(i, other_val)| (i, utils::dot_product(&other_val.1, val))),
-                );
+                let mut metrics: Vec<(usize, f32)> = self
+                    .vocabulary
+                    .iter()
+                    .enumerate()
+                    .map(|(i, other_val)| (i, utils::dot_product(&other_val.1, val)))
+                    .collect::<Vec<(usize, f32)>>();
                 metrics.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
                 Some(
                     metrics[1..n + 1]
@@ -94,7 +81,7 @@ impl WordVector {
         for word in pos {
             exclude.push(word.to_string());
             match self.get_vector(word).await {
-                Some(val) => vectors.push(val.clone()),
+                Some(val) => vectors.push(val.to_owned()),
                 None => {}
             }
         }

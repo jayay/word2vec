@@ -1,7 +1,7 @@
-use tokio::io::{AsyncBufRead, AsyncBufReadExt, AsyncReadExt};
 use crate::errors::Word2VecError;
 use crate::utils;
 use crate::wordvectors::WordVector;
+use tokio::io::{AsyncBufRead, AsyncBufReadExt, AsyncReadExt};
 
 use async_trait::async_trait;
 
@@ -46,7 +46,11 @@ pub trait WordVectorBuilder {
 #[async_trait]
 impl<R: AsyncBufRead + Unpin + Send> WordVectorBuilder for WordVectorReader<R> {
     async fn build_vocabulary(self) -> Result<&'static WordVector, Word2VecError> {
-        let mut vocabulary = Vec::with_capacity(self.vocabulary_size);
+        let vector_size = self.vector_size;
+        let mut bomx = Box::new(WordVector {
+            vocabulary: Vec::with_capacity(self.vocabulary_size),
+            vector_size,
+        });
         for _ in 0..self.vocabulary_size {
             let mut word_bytes: Vec<u8> = Vec::new();
             if let Err(e) = self.reader.read_until(b' ', &mut word_bytes).await {
@@ -64,23 +68,17 @@ impl<R: AsyncBufRead + Unpin + Send> WordVectorBuilder for WordVectorReader<R> {
             // Read floats of the vector
             let mut vector = Vec::<f32>::with_capacity(self.vector_size);
 
-            for _ in 0..self.vector_size {
+            for i in 0..self.vector_size {
                 match self.reader.read_f32_le().await {
                     Err(e) => return Err(Word2VecError::from(e)),
-                    Ok(value) => vector.push(value),
+                    Ok(value) => vector.insert(i, value),
                 }
             }
 
             utils::vector_norm(&mut vector);
-            vocabulary.push((word, vector));
+            bomx.vocabulary.push((word, vector));
         }
-        let vector_size = self.vector_size;
-        let bomx = Box::new(WordVector {
-            vocabulary,
-            vector_size,
-        });
-        let ptr = Box::leak(bomx);
 
-        Ok(ptr)
+        Ok(Box::leak(bomx))
     }
 }

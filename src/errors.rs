@@ -3,7 +3,6 @@ use std::fmt;
 use std::io;
 use std::string::FromUtf8Error;
 
-
 /// Common error type for errors  concerning loading and processing binary word vectors
 ///
 /// This error type mostly wraps I/O and encoding errors, but also adds crate-specific error
@@ -50,4 +49,3 @@ impl From<FromUtf8Error> for Word2VecError {
         Word2VecError::Decode(err)
     }
 }
-
