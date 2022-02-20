@@ -16,13 +16,10 @@ fn test_word_cosine() {
 
 
 #[test]
-fn test_unexisting_word_cosine() {
+fn test_nonexisting_word_cosine() {
     let model = WordVector::load_from_binary(PATH).unwrap();
     let result = model.cosine("somenotexistingword", 10);
-    match result {
-        Some(_) => assert!(false),
-        None => assert!(true),
-    }
+    assert!(result.is_none());
 }
 
 
@@ -47,14 +44,17 @@ fn test_word_analogy() {
 fn test_word_analogy_with_empty_params() {
     let model = WordVector::load_from_binary(PATH).unwrap();
     let result = model.analogy(Vec::new(), Vec::new(), 10);
-    match result {
-        Some(_) => assert!(false),
-        None => assert!(true),
-    }
+    assert!(result.is_none());
 }
 
 #[test]
 fn test_word_count_is_correctly_returned() {
     let v = WordVector::load_from_binary(PATH).unwrap();
     assert_eq!(v.word_count(), 71291);
+}
+
+#[test]
+fn test_words() {
+    let v = WordVector::load_from_binary(PATH).unwrap();
+    assert_eq!(v.get_words().count(), 71291);
 }
