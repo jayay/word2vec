@@ -17,11 +17,7 @@ pub enum Word2VecError {
 
 impl error::Error for Word2VecError {
     fn description(&self) -> &str {
-        match *self {
-            Word2VecError::Decode(ref err) => err.description(),
-            Word2VecError::Io(ref err) => err.description(),
-            Word2VecError::WrongHeader => "Wrong header format",
-        }
+        unimplemented!("Please use fmt::Display.")
     }
 
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
