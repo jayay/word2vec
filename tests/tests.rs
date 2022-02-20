@@ -1,5 +1,7 @@
 extern crate word2vec;
 use word2vec::wordvectors::WordVector;
+use word2vec::vectorreader::WordVectorReader;
+use word2vec::wordvectors::Words;
 
 const PATH: &str = "vectors.bin";
 
@@ -56,4 +58,13 @@ fn test_word_count_is_correctly_returned() {
 fn test_words() {
     let v = WordVector::load_from_binary(PATH).unwrap();
     assert_eq!(v.get_words().count(), 71291);
+}
+
+fn is_normal<T: Sized + Send + Unpin>() {}
+
+#[test]
+fn normal_types() {
+    is_normal::<WordVector>();
+    is_normal::<WordVectorReader<std::io::BufReader<std::fs::File>>>();
+    is_normal::<Words>();
 }
