@@ -14,28 +14,21 @@ async fn test_word_cosine() {
         .await
         .expect("word not found in vocabulary");
     assert_eq!(res.len(), 10);
-    let only_words: Vec<&str> = res.iter().map(|x| x.0.as_ref()).collect();
-    assert!(!only_words.contains(&"winter"))
+    assert!(!res.iter().map(|x| x.0.as_ref() as &str).any(|x| x == "winter"))
 }
 
 #[tokio::test]
 async fn test_unexisting_word_cosine() {
     let model = WordVector::load_from_binary(PATH).await.unwrap();
     let result = model.cosine("somenotexistingword", 10).await;
-    match result {
-        Some(_) => assert!(false),
-        None => assert!(true),
-    }
+    assert!(result.is_none())
 }
 
 #[tokio::test]
 async fn test_word_analogy() {
     let model = WordVector::load_from_binary(PATH).await.unwrap();
-    let mut pos = Vec::new();
-    pos.push("woman");
-    pos.push("king");
-    let mut neg = Vec::new();
-    neg.push("man");
+    let pos = vec!["woman", "king"];
+    let neg = vec!["man"];
     let res = model
         .analogy(&pos, &neg, 10)
         .await
@@ -51,10 +44,7 @@ async fn test_word_analogy() {
 async fn test_word_analogy_with_empty_params() {
     let model = WordVector::load_from_binary(PATH).await.unwrap();
     let result = model.analogy(&Vec::new(), &Vec::new(), 10).await;
-    match result {
-        Some(_) => assert!(false),
-        None => assert!(true),
-    }
+    assert!(result.is_none());
 }
 
 #[tokio::test]
@@ -66,5 +56,5 @@ async fn test_word_count_is_correctly_returned() {
 #[tokio::test]
 async fn test_words() {
     let v = WordVector::load_from_binary(PATH).await.unwrap();
-    assert_eq!(v.get_words().await.collect::<Vec<&String>>().len(), 71291);
+    assert_eq!(v.get_words().await.count(), 71291);
 }

@@ -48,7 +48,7 @@ impl WordVector {
                 let mut metrics: Vec<(String, f32)> = self
                     .vocabulary
                     .iter()
-                    .map(|(i, other_val)| (i.to_owned(), utils::dot_product(&other_val, val)))
+                    .map(|(i, other_val)| (i.to_owned(), utils::dot_product(other_val, val)))
                     .collect();
                 metrics.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
                 Some(metrics[1..n + 1].iter().map(|v| v.to_owned()).collect())
@@ -88,7 +88,7 @@ impl WordVector {
         }
         let mut metrics: Vec<(&String, f32)> = Vec::new();
         for word in self.vocabulary.iter() {
-            metrics.push((&word.0, utils::dot_product(&word.1, &mean)));
+            metrics.push((word.0, utils::dot_product(word.1, &mean)));
         }
         metrics.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
         metrics.retain(|x| !exclude.contains(x.0));
