@@ -7,7 +7,7 @@ async fn main(){
 	println!("{:?}", model.cosine("snow", 10).await);
 	let positive = vec!["woman", "king"];
 	let negative = vec!["man"];
-	println!("{:?}", model.analogy(positive, negative, 10).await);
+	println!("{:?}", model.analogy(&positive, &negative, 10).await);
 
 	let clusters = word2vec::wordclusters::WordClusters::load_from_file(
 		"classes.txt").expect("Unable to load word clusters");

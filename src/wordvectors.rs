@@ -71,8 +71,8 @@ impl WordVector {
 
     pub async fn analogy(
         &self,
-        pos: Vec<&str>,
-        neg: Vec<&str>,
+        pos: &[&str],
+        neg: &[&str],
         n: usize,
     ) -> Option<Vec<(String, f32)>> {
         let mut vectors: Vec<Vec<f32>> = Vec::new();
@@ -124,7 +124,7 @@ impl WordVector {
     }
 
     /// Get all known words from the vocabulary.
-    pub fn get_words(&self) -> Words {
+    pub async fn get_words(&'static self) -> Words<'static> {
         Words::new(&self.vocabulary)
     }
 }

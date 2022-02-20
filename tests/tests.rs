@@ -37,7 +37,7 @@ async fn test_word_analogy() {
     let mut neg = Vec::new();
     neg.push("man");
     let res = model
-        .analogy(pos, neg, 10)
+        .analogy(&pos, &neg, 10)
         .await
         .expect("couldn't find all of the given words");
     assert_eq!(res.len(), 10);
@@ -50,7 +50,7 @@ async fn test_word_analogy() {
 #[tokio::test]
 async fn test_word_analogy_with_empty_params() {
     let model = WordVector::load_from_binary(PATH).await.unwrap();
-    let result = model.analogy(Vec::new(), Vec::new(), 10).await;
+    let result = model.analogy(&Vec::new(), &Vec::new(), 10).await;
     match result {
         Some(_) => assert!(false),
         None => assert!(true),
