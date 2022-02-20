@@ -62,3 +62,9 @@ async fn test_word_count_is_correctly_returned() {
     let v = WordVector::load_from_binary(PATH).await.unwrap();
     assert_eq!(v.word_count().await, 71291);
 }
+
+#[tokio::test]
+async fn test_words() {
+    let v = WordVector::load_from_binary(PATH).await.unwrap();
+    assert_eq!(v.get_words().await.collect::<Vec<&String>>().len(), 71291);
+}

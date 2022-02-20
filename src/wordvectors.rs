@@ -1,4 +1,6 @@
 use std::cmp::Ordering;
+use std::collections::hash_map::Keys;
+use std::collections::HashMap;
 
 use crate::errors::Word2VecError;
 use crate::utils;
@@ -10,7 +12,7 @@ use crate::vectorreader::WordVectorReader;
 /// Each word of a vocabulary is represented by a vector. All words span a vector space. This data
 /// structure manages this vector space of words.
 pub struct WordVector {
-    pub vocabulary: Vec<(String, Vec<f32>)>,
+    pub vocabulary: HashMap<String, Vec<f32>>,
     pub vector_size: usize,
 }
 
@@ -28,17 +30,9 @@ impl WordVector {
         b.build_vocabulary().await
     }
 
-    fn get_index(&self, word: &str) -> Option<usize> {
-        self.vocabulary.iter().position(|x| x.0.as_str() == word)
-    }
-
     /// Get word vector for the given word.
     pub async fn get_vector(&self, word: &str) -> Option<&Vec<f32>> {
-        let index = self.get_index(word);
-        match index {
-            Some(val) => Some(&self.vocabulary[val].1),
-            None => None,
-        }
+        self.vocabulary.get(word)
     }
 
     /// Compute cosine distance to similar words.
@@ -47,23 +41,17 @@ impl WordVector {
     /// other. This method calculates the `n` closest words via the cosine of the requested word to
     /// all other words.
     pub async fn cosine(&self, word: &str, n: usize) -> Option<Vec<(String, f32)>> {
-        let word_vector = self.get_vector(word).await;
+        let word_vector = self.vocabulary.get(word);
         match word_vector {
             Some(val) => {
                 // save index and cosine distance to current word
-                let mut metrics: Vec<(usize, f32)> = self
+                let mut metrics: Vec<(String, f32)> = self
                     .vocabulary
                     .iter()
-                    .enumerate()
-                    .map(|(i, other_val)| (i, utils::dot_product(&other_val.1, val)))
-                    .collect::<Vec<(usize, f32)>>();
+                    .map(|(i, other_val)| (i.to_owned(), utils::dot_product(&other_val, val)))
+                    .collect();
                 metrics.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
-                Some(
-                    metrics[1..n + 1]
-                        .iter()
-                        .map(|&(idx, dist)| (self.vocabulary[idx].clone().0, dist))
-                        .collect(),
-                )
+                Some(metrics[1..n + 1].iter().map(|v| v.to_owned()).collect())
             }
             None => None,
         }
@@ -79,14 +67,14 @@ impl WordVector {
         let mut exclude: Vec<String> = Vec::new();
         for word in pos {
             exclude.push(word.to_string());
-            match self.get_vector(word).await {
+            match self.vocabulary.get(word.to_owned()) {
                 Some(val) => vectors.push(val.to_owned()),
                 None => {}
             }
         }
         for word in neg.iter() {
             exclude.push(word.to_string());
-            match self.get_vector(word).await {
+            match self.vocabulary.get(word.to_owned()) {
                 Some(val) => vectors.push(val.iter().map(|x| -x).collect::<Vec<f32>>()),
                 None => {}
             }
@@ -129,25 +117,21 @@ impl WordVector {
     }
 }
 
+#[derive(Debug)]
 pub struct Words<'parent> {
-    words: &'parent Vec<(String, Vec<f32>)>,
-    index: usize,
+    iter: Keys<'parent, String, Vec<f32>>,
 }
 
 impl<'a> Words<'a> {
-    fn new(x: &'a Vec<(String, Vec<f32>)>) -> Words<'a> {
-        Words { words: x, index: 0 }
+    fn new(x: &'a HashMap<String, Vec<f32>>) -> Words<'a> {
+        Words { iter: x.keys() }
     }
 }
 
 impl<'a> Iterator for Words<'a> {
-    type Item = String;
+    type Item = &'a String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index >= self.words.len() {
-            return None;
-        }
-        self.index += 1;
-        Some(self.words[self.index - 1].0.clone())
+        self.iter.next()
     }
 }

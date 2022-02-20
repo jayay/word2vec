@@ -1,6 +1,7 @@
 use crate::errors::Word2VecError;
 use crate::utils;
 use crate::wordvectors::WordVector;
+use std::collections::HashMap;
 use tokio::io::{AsyncBufRead, AsyncBufReadExt, AsyncReadExt};
 
 use async_trait::async_trait;
@@ -48,7 +49,7 @@ impl<R: AsyncBufRead + Unpin + Send> WordVectorBuilder for WordVectorReader<R> {
     async fn build_vocabulary(self) -> Result<&'static WordVector, Word2VecError> {
         let vector_size = self.vector_size;
         let mut bomx = Box::new(WordVector {
-            vocabulary: Vec::with_capacity(self.vocabulary_size),
+            vocabulary: HashMap::with_capacity(self.vocabulary_size),
             vector_size,
         });
         for _ in 0..self.vocabulary_size {
@@ -76,7 +77,7 @@ impl<R: AsyncBufRead + Unpin + Send> WordVectorBuilder for WordVectorReader<R> {
             }
 
             utils::vector_norm(&mut vector);
-            bomx.vocabulary.push((word, vector));
+            bomx.vocabulary.insert(word, vector);
         }
 
         Ok(Box::leak(bomx))
