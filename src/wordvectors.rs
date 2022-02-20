@@ -1,12 +1,12 @@
-use std::io::prelude::*;
-use std::io::BufReader;
-use std::fs::File;
-use std::cmp::Ordering;
-use std::collections::hash_map::Keys;
-use std::collections::HashMap;
 use crate::errors::Word2VecError;
 use crate::utils;
 use crate::vectorreader::WordVectorReader;
+use std::cmp::Ordering;
+use std::collections::hash_map::Keys;
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
 
 /// Representation of a word vector space
 ///
@@ -18,7 +18,6 @@ pub struct WordVector {
 }
 
 impl WordVector {
-
     /// Load a word vector space from file
     ///
     /// Word2vec is able to store the word vectors in a binary file. This function parses the file
@@ -27,7 +26,7 @@ impl WordVector {
         let file = File::open(file_name)?;
         let reader = BufReader::new(file);
 
-        return WordVector::load_from_reader(reader);
+        WordVector::load_from_reader(reader)
     }
 
     /// Load a word vector space from a reader
@@ -35,13 +34,12 @@ impl WordVector {
     /// Word2vec is able to store the word vectors in a binary format. This function parses the bytes in that format
     /// and loads the vectors into RAM.
     pub fn load_from_reader<R: BufRead>(reader: R) -> Result<WordVector, Word2VecError> {
-
         let reader = WordVectorReader::new_from_reader(reader)?;
         let vector_size = reader.vector_size();
 
-        let mut vocabulary: HashMap<String, Vec<f32>> = HashMap::with_capacity(reader.vocabulary_size());
+        let mut vocabulary: HashMap<String, Vec<f32>> =
+            HashMap::with_capacity(reader.vocabulary_size());
         for item in reader {
-
             let (word, mut vector) = item;
             utils::vector_norm(&mut vector);
 
@@ -72,7 +70,7 @@ impl WordVector {
                 let mut metrics: Vec<(String, f32)> = self
                     .vocabulary
                     .iter()
-                    .map(|(i, other_val)| (i.to_owned(), utils::dot_product(&other_val, val)))
+                    .map(|(i, other_val)| (i.to_owned(), utils::dot_product(other_val, val)))
                     .collect();
                 metrics.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
                 Some(metrics[1..n + 1].iter().map(|v| v.to_owned()).collect())
@@ -107,11 +105,17 @@ impl WordVector {
         }
         let mut metrics: Vec<(&String, f32)> = Vec::new();
         for word in self.vocabulary.iter() {
-            metrics.push((&word.0, utils::dot_product(&word.1, &mean)));
+            metrics.push((word.0, utils::dot_product(word.1, &mean)));
         }
         metrics.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
-        metrics.retain(|x| !exclude.contains(&x.0));
-        Some(metrics.iter().take(n).map(|&(x,y)| (x.clone(), y)).collect())
+        metrics.retain(|x| !exclude.contains(x.0));
+        Some(
+            metrics
+                .iter()
+                .take(n)
+                .map(|&(x, y)| (x.clone(), y))
+                .collect(),
+        )
     }
 
     /// Get the number of all known words from the vocabulary.
@@ -125,7 +129,7 @@ impl WordVector {
     }
 
     /// Get all known words from the vocabulary.
-    pub fn get_words(& self) -> Words {
+    pub fn get_words(&self) -> Words {
         Words::new(&self.vocabulary)
     }
 }

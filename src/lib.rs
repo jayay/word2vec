@@ -1,9 +1,9 @@
 #![feature(test)]
-extern crate test;
 extern crate byteorder;
+extern crate test;
 
-pub mod vectorreader;
-pub mod wordvectors;
-pub mod wordclusters;
-mod utils;
 pub mod errors;
+mod utils;
+pub mod vectorreader;
+pub mod wordclusters;
+pub mod wordvectors;
