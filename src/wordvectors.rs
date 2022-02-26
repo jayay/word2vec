@@ -13,8 +13,8 @@ use std::io::BufReader;
 /// Each word of a vocabulary is represented by a vector. All words span a vector space. This data
 /// structure manages this vector space of words.
 pub struct WordVector {
-    pub vocabulary: HashMap<String, Vec<f32>>,
-    pub vector_size: usize,
+    vocabulary: HashMap<String, Vec<f32>>,
+    vector_size: usize,
 }
 
 impl WordVector {
