@@ -7,12 +7,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with:
-          lfs: 'true'
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
           override: true
+      - name: download test model
+        run: wget -c -O vectors.bin 'https://www.dropbox.com/s/y4ls6yd4k0wbzhp/vectors.bin?dl=0'
       - uses: actions-rs/cargo@v1
         with:
           command: test

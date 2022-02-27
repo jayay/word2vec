@@ -23,5 +23,13 @@ jobs:
       with:
           toolchain: nightly
           override: true
-    - name: Build
+    - name: Build with simd
       run: cargo build --features "simd" --verbose
+    - name: Build
+      run: cargo build --verbose
+    - name: download test model
+      run: wget -c -O vectors.bin 'https://www.dropbox.com/s/y4ls6yd4k0wbzhp/vectors.bin?dl=0'
+    - name: Test with simd
+      run: cargo test --features "simd" --verbose
+    - name: Test
+      run: cargo test --verbose
