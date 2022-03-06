@@ -25,3 +25,5 @@ jobs:
           override: true
     - name: Build
       run: cargo build --features "simd" --verbose
+    - name: clippy
+      run: cargo clippy
