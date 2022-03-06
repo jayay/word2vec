@@ -23,6 +23,7 @@ jobs:
       with:
           toolchain: nightly
           override: true
+          components: clippy
     - name: Build
       run: cargo build --features "simd" --verbose
     - name: clippy
