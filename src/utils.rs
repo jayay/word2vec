@@ -1,20 +1,25 @@
 #[cfg(feature = "simd")]
-extern crate packed_simd;
-
-#[cfg(feature = "simd")]
-use self::packed_simd::f32x4;
-
-#[cfg(feature = "simd")]
 pub fn dot_product(x: &[f32], y: &[f32]) -> f32 {
+    use std::ops::Add;
+    use std::simd::f32x4;
     assert_eq!(x.len(), y.len());
     assert_eq!(x.len() % 4, 0);
 
-    x.chunks_exact(4)
-        .map(f32x4::from_slice_unaligned)
-        .zip(y.chunks_exact(4).map(f32x4::from_slice_unaligned))
+    let (prefix, middle_x, suffix) = x.as_simd();
+    let (_, middle_y, _) = y.as_simd();
+    let sums = f32x4::from_array([
+        prefix.iter().copied().sum(),
+        0.0,
+        0.0,
+        suffix.iter().copied().sum(),
+    ]);
+    let sums = middle_x
+        .iter()
+        .zip(middle_y.iter())
         .map(|(x, y)| x * y)
-        .sum::<f32x4>()
-        .sum()
+        .fold(sums, f32x4::add);
+
+    sums.reduce_sum()
 }
 
 #[cfg(not(feature = "simd"))]
@@ -28,21 +33,29 @@ pub fn dot_product(arr1: &[f32], arr2: &[f32]) -> f32 {
 
 #[cfg(feature = "simd")]
 pub fn vector_norm(vector: &mut Vec<f32>) {
+    use std::ops::Add;
+    use std::ops::Mul;
+    use std::simd::f32x4;
     assert_eq!(vector.len() % 4, 0);
 
-    let sum = 1.0
-        / vector
-            .chunks_exact(4)
-            .map(f32x4::from_slice_unaligned)
-            .map(|x| x * x)
-            .sum::<f32x4>()
-            .sum()
-            .sqrt();
+    let (prefix, middle, suffix) = vector.as_simd();
+    let sums = f32x4::from_array([
+        prefix.iter().copied().sum(),
+        0.0,
+        0.0,
+        suffix.iter().copied().sum(),
+    ]);
 
-    for mut chunk in vector.chunks_exact_mut(4) {
-        let mut simd = f32x4::from_slice_unaligned(&mut chunk);
-        simd *= sum;
-        unsafe { simd.write_to_slice_unaligned_unchecked(&mut chunk) }
+    let sums = middle
+        .iter()
+        .zip(middle.iter())
+        .map(|(l, r)| f32x4::mul(*l, r))
+        .fold(sums, f32x4::add);
+
+    let sum = 1.0 / sums.reduce_sum().sqrt();
+
+    for x in vector.iter_mut() {
+        (*x) *= sum;
     }
 }
 

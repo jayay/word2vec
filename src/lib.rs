@@ -1,4 +1,5 @@
 #![feature(test)]
+#![feature(portable_simd)]
 extern crate byteorder;
 extern crate test;
 
