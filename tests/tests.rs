@@ -1,6 +1,6 @@
 extern crate word2vec;
-use word2vec::wordvectors::WordVector;
 use word2vec::vectorreader::WordVectorReader;
+use word2vec::wordvectors::WordVector;
 use word2vec::wordvectors::Words;
 
 const PATH: &str = "vectors.bin";
