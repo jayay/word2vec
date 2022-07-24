@@ -34,6 +34,7 @@ pub fn dot_product(arr1: &[f32], arr2: &[f32]) -> f32 {
 
 #[cfg(feature = "simd")]
 pub fn vector_norm(vector: &mut Vec<f32>) {
+    use std::simd::SimdFloat;
     use std::ops::Add;
     use std::ops::Mul;
     use std::simd::f32x4;
