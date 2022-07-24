@@ -1,5 +1,6 @@
 #[cfg(feature = "simd")]
 pub fn dot_product(x: &[f32], y: &[f32]) -> f32 {
+    use std::simd::SimdFloat;
     use std::ops::Add;
     use std::simd::f32x4;
     assert_eq!(x.len(), y.len());
@@ -8,10 +9,10 @@ pub fn dot_product(x: &[f32], y: &[f32]) -> f32 {
     let (prefix, middle_x, suffix) = x.as_simd();
     let (_, middle_y, _) = y.as_simd();
     let sums = f32x4::from_array([
-        prefix.iter().copied().sum(),
+        prefix.iter().sum(),
         0.0,
         0.0,
-        suffix.iter().copied().sum(),
+        suffix.iter().sum(),
     ]);
     let sums = middle_x
         .iter()
