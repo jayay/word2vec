@@ -24,7 +24,7 @@ impl WordClusters {
                 let mut iter = buffer.split_whitespace();
                 let word = iter.next().unwrap();
                 let cluster_number = iter.next().unwrap().trim().parse::<i32>().ok().unwrap();
-                let cluster = clusters.entry(cluster_number).or_insert(Vec::new());
+                let cluster = clusters.entry(cluster_number).or_default();
                 cluster.push(word.to_string());
             }
             buffer.clear();

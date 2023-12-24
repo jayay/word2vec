@@ -1,8 +1,8 @@
 #[cfg(feature = "simd")]
+use std::simd::prelude::*;
+#[cfg(feature = "simd")]
 pub fn dot_product(x: &[f32], y: &[f32]) -> f32 {
-    use std::simd::SimdFloat;
     use std::ops::Add;
-    use std::simd::f32x4;
     assert_eq!(x.len(), y.len());
     assert_eq!(x.len() % 4, 0);
 
@@ -34,10 +34,8 @@ pub fn dot_product(arr1: &[f32], arr2: &[f32]) -> f32 {
 
 #[cfg(feature = "simd")]
 pub fn vector_norm(vector: &mut Vec<f32>) {
-    use std::simd::SimdFloat;
     use std::ops::Add;
     use std::ops::Mul;
-    use std::simd::f32x4;
     assert_eq!(vector.len() % 4, 0);
 
     let (prefix, middle, suffix) = vector.as_simd();
